@@ -78,7 +78,7 @@ class MoController extends Controller
         $validated = array_merge($validated, $this->validate($request, [
             'date' => 'required|date',
             'set_id' => 'required|integer|exists:sets,id',
-            'remarks' => 'nullable|string|max:100',
+            'remarks' => 'nullable|string|max:4096',
             'office_id' => 'required|integer|exists:offices,id',
         ]));
 
@@ -153,7 +153,7 @@ class MoController extends Controller
         $validated = array_merge($validated, $this->validate($request, [
             'date' => 'required|date',
             'set_id' => 'required|integer|exists:sets,id',
-            'remarks' => 'nullable|string|max:100',
+            'remarks' => 'nullable|string|max:4096',
             'office_id' => 'required|integer|exists:offices,id',
         ]));
 

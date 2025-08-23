@@ -73,7 +73,7 @@ class EditRtnLog extends Component
             'recording_office_id' => 'required|exists:offices,id',
             'arrived_at' => 'required|date',
             'departed_at' => 'required|date',
-            'remarks' => 'nullable|string',
+            'remarks' => 'nullable|string|max:4096',
             'office_ids' => 'required|array',
             'office_ids.*' => 'required|exists:offices,id',
             'bags_received' => 'required|array',
