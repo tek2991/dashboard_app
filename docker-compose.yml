@@ -20,7 +20,8 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/var/www
+      - ./storage:/var/www/storage
+      - ./bootstrap/cache:/var/www/bootstrap/cache
     depends_on:
       - db
     networks:
@@ -34,7 +35,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - .:/var/www
+      - ./public:/var/www/public
+      - ./storage:/var/www/storage
       - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
