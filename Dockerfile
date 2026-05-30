@@ -6,17 +6,7 @@ RUN composer install --no-interaction --no-dev --prefer-dist --ignore-platform-r
 COPY . .
 RUN composer dump-autoload --optimize
 
-# Stage 2: Build Frontend Assets
-FROM node:20-alpine AS frontend
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-COPY --from=vendor /app/vendor /app/vendor
-ENV NODE_OPTIONS="--max-old-space-size=1024"
-RUN npm run build
-
-# Stage 3: Build Backend & Runtime
+# Stage 2: Build Backend & Runtime
 FROM php:8.3-fpm
 
 # Install system dependencies
@@ -45,9 +35,6 @@ COPY . .
 
 # Copy built vendor directory from the vendor stage
 COPY --from=vendor /app/vendor /var/www/vendor
-
-# Copy built frontend assets from the frontend stage
-COPY --from=frontend /app/public/build /var/www/public/build
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www \
