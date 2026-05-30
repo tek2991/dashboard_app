@@ -16,3 +16,4 @@ init-letsencrypt.sh
 docker/nginx/app.conf
 *.sql.gz
 *.sql
+/data
