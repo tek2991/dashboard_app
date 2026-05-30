@@ -7,6 +7,8 @@ module.exports = {
         "./storage/framework/views/*.php",
         "./resources/views/**/*.blade.php",
         "./app/Http/Livewire/**/*.php",
+        "./vendor/power-components/livewire-powergrid/resources/views/**/*.php",
+        "./vendor/power-components/livewire-powergrid/src/Themes/Tailwind2.php",
     ],
 
     theme: {
@@ -26,4 +28,7 @@ module.exports = {
     },
 
     plugins: [require("@tailwindcss/forms")],
+    presets: [
+        require("./vendor/power-components/livewire-powergrid/tailwind.config.js"),
+    ],
 };

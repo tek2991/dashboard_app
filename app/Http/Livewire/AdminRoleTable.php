@@ -5,13 +5,18 @@ namespace App\Http\Livewire;
 use App\Models\Role;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class AdminRoleTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_adminroletable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -25,9 +30,9 @@ final class AdminRoleTable extends PowerGridComponent
         //$this->showCheckBox();
 
         return [
-            //Exportable::make('export')->striped(),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            //PowerGrid::exportable('export')->striped(),
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -77,13 +82,13 @@ final class AdminRoleTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('created_at_formatted', fn (Role $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
-            ->addColumn('updated_at_formatted', fn (Role $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
+        return PowerGrid::fields()
+            ->add('id')
+            ->add('name')
+            ->add('created_at_formatted', fn (Role $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
+            ->add('updated_at_formatted', fn (Role $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -113,17 +118,23 @@ final class AdminRoleTable extends PowerGridComponent
             Column::make('CREATED AT', 'created_at_formatted', 'created_at')
                 ->searchable()
                 ->sortable()
-                ->makeInputDatePicker()
                 ->hidden(),
 
             Column::make('UPDATED AT', 'updated_at_formatted', 'updated_at')
                 ->searchable()
                 ->sortable()
-                ->makeInputDatePicker()
                 ->hidden(),
 
         ]
 ;
+    }
+
+    public function filters(): array
+    {
+        return [
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::datepicker('created_at_formatted', 'created_at'),
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::datepicker('updated_at_formatted', 'updated_at'),
+        ];
     }
 
     /*
@@ -141,16 +152,16 @@ final class AdminRoleTable extends PowerGridComponent
      */
 
     /*
-    public function actions(): array
+    public function actions($row): array
     {
        return [
            Button::make('edit', 'Edit')
                ->class('bg-indigo-500 cursor-pointer text-white px-3 py-2.5 m-1 rounded text-sm')
-               ->route('role.edit', ['role' => 'id']),
+               ->route('role.edit', ['role' => $row->id]),
 
            Button::make('destroy', 'Delete')
                ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-               ->route('role.destroy', ['role' => 'id'])
+               ->route('role.destroy', ['role' => $row->id])
                ->method('delete')
         ];
     }

@@ -19,7 +19,6 @@
 
     <!-- Styles -->
     @livewireStyles
-    @powerGridStyles
 </head>
 
 <body class="font-sans antialiased">
@@ -47,7 +46,6 @@
     </div>
     <!-- Scripts -->
     @livewireScripts
-    @powerGridScripts
 </body>
 
 </html>

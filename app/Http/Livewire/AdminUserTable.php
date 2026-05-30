@@ -6,13 +6,18 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class AdminUserTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_adminusertable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -26,11 +31,11 @@ final class AdminUserTable extends PowerGridComponent
         $this->showCheckBox();
 
         return [
-            Exportable::make('export')
+            PowerGrid::exportable('export')
                 ->striped()
                 ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -87,25 +92,25 @@ final class AdminUserTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('email')
-            ->addColumn('email_verified_at')
-            ->addColumn('email_verified_at_formatted', function ($model) {
+        return PowerGrid::fields()
+            ->add('id')
+            ->add('name')
+            ->add('email')
+            ->add('email_verified_at')
+            ->add('email_verified_at_formatted', function ($model) {
                 return $model->email_verified_at ? 'Yes' : 'No';
             })
-            ->addColumn('roles', function (User $user) {
+            ->add('roles', function (User $user) {
                 return $user->roles->implode('name', ', ');
             })
-            ->addColumn('offices', function (User $user) {
+            ->add('offices', function (User $user) {
                 return $user->offices->implode('name', ', ');
             })
-            ->addColumn('designation')
-            ->addColumn('created_at')
-            ->addColumn('created_at_formatted', fn (User $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
+            ->add('designation')
+            ->add('created_at')
+            ->add('created_at_formatted', fn (User $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -138,6 +143,7 @@ final class AdminUserTable extends PowerGridComponent
             Column::make('Roles', 'roles'),
 
             Column::make('Offices', 'offices'),
+            Column::action('Action'),
         ];
     }
 
@@ -155,18 +161,17 @@ final class AdminUserTable extends PowerGridComponent
      * @return array<int, Button>
      */
 
-    public function actions(): array
+    public function actions($row): array
     {
         return [
             Button::make('edit', 'Edit')
                 ->class('text-indigo-600 hover:text-indigo-900 hover:underline')
-                ->route('admin.users.edit', ['user' => 'id'])
-                ->target(''),
+                ->route('admin.users.edit', ['user' => $row->id])
 
             /*
            Button::make('destroy', 'Delete')
                ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-               ->route('user.destroy', ['user' => 'id'])
+               ->route('user.destroy', ['user' => $row->id])
                ->method('delete')
                */
         ];

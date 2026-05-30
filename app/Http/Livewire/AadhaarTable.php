@@ -5,13 +5,18 @@ namespace App\Http\Livewire;
 use App\Models\Aadhaar;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class AadhaarTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_aadhaartable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -25,11 +30,11 @@ final class AadhaarTable extends PowerGridComponent
         $this->showCheckBox();
 
         return [
-            Exportable::make('export')
+            PowerGrid::exportable('export')
                 ->striped()
                 ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -83,24 +88,24 @@ final class AadhaarTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('import_id')
-            ->addColumn('division_id')
-            ->addColumn('division_name')
-            ->addColumn('station_no')
-            ->addColumn('centre_name')
-            ->addColumn('pincode')
-            ->addColumn('operator_name')
-            ->addColumn('transaction_date')
-            ->addColumn('transaction_date_formatted', fn (Aadhaar $model) => Carbon::parse($model->transaction_date)->format('d/m/Y'))
-            ->addColumn('centre_type')
-            ->addColumn('enrolments')
-            ->addColumn('updates')
-            ->addColumn('created_at_formatted', fn (Aadhaar $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
-            ->addColumn('updated_at_formatted', fn (Aadhaar $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
+        return PowerGrid::fields()
+            ->add('id')
+            ->add('import_id')
+            ->add('division_id')
+            ->add('division_name')
+            ->add('station_no')
+            ->add('centre_name')
+            ->add('pincode')
+            ->add('operator_name')
+            ->add('transaction_date')
+            ->add('transaction_date_formatted', fn (Aadhaar $model) => Carbon::parse($model->transaction_date)->format('d/m/Y'))
+            ->add('centre_type')
+            ->add('enrolments')
+            ->add('updates')
+            ->add('created_at_formatted', fn (Aadhaar $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
+            ->add('updated_at_formatted', fn (Aadhaar $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -120,26 +125,22 @@ final class AadhaarTable extends PowerGridComponent
     public function columns(): array
     {
         return [
-            Column::make('DIVISION', 'division_name')
-                ->makeInputSelect(\App\Models\Division::all(), 'name', 'aadhaars.division_id'),
+            Column::make('DIVISION', 'division_name'),
 
             Column::make('STATION NO', 'station_no')
                 ->sortable(),
 
             Column::make('CENTRE NAME', 'centre_name')
                 ->sortable()
-                ->searchable()
-                ->makeInputText(),
+                ->searchable(),
 
             Column::make('OPERATOR NAME', 'operator_name')
                 ->sortable()
-                ->searchable()
-                ->makeInputText(),
+                ->searchable(),
 
             Column::make('TRANSACTION DATE', 'transaction_date_formatted', 'transaction_date')
                 ->searchable()
-                ->sortable()
-                ->makeInputDatePicker(),
+                ->sortable(),
 
             Column::make('CENTRE TYPE', 'centre_type')
                 ->sortable(),
@@ -157,6 +158,19 @@ final class AadhaarTable extends PowerGridComponent
 ;
     }
 
+    public function filters(): array
+    {
+        return [
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::select('division_name', 'aadhaars.division_id')
+                ->dataSource(\App\Models\Division::all())
+                ->optionLabel('name')
+                ->optionValue('id'),
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::inputText('centre_name'),
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::inputText('operator_name'),
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::datepicker('transaction_date_formatted', 'transaction_date'),
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Actions Method
@@ -172,16 +186,16 @@ final class AadhaarTable extends PowerGridComponent
      */
 
     /*
-    public function actions(): array
+    public function actions($row): array
     {
        return [
            Button::make('edit', 'Edit')
                ->class('bg-indigo-500 cursor-pointer text-white px-3 py-2.5 m-1 rounded text-sm')
-               ->route('aadhaar.edit', ['aadhaar' => 'id']),
+               ->route('aadhaar.edit', ['aadhaar' => $row->id]),
 
            Button::make('destroy', 'Delete')
                ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-               ->route('aadhaar.destroy', ['aadhaar' => 'id'])
+               ->route('aadhaar.destroy', ['aadhaar' => $row->id])
                ->method('delete')
         ];
     }

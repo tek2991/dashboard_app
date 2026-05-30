@@ -6,13 +6,18 @@ use App\Models\Byod;
 use App\Models\Division;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class ByodTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_byodtable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -26,11 +31,11 @@ final class ByodTable extends PowerGridComponent
         $this->showCheckBox();
 
         return [
-            Exportable::make('export')
+            PowerGrid::exportable('export')
                 ->striped()
                 ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -83,25 +88,25 @@ final class ByodTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('mobile')
-            ->addColumn('email')
-            ->addColumn('make_model')
-            ->addColumn('imei')
-            ->addColumn('post_office')
-            ->addColumn('date_of_purchase_formatted', fn (Byod $model) => Carbon::parse($model->date_of_purchase)->format('d/m/Y'))
-            ->addColumn('date_of_acceptance_formatted', fn (Byod $model) => Carbon::parse($model->date_of_acceptance)->format('d/m/Y'))
-            ->addColumn('division_id')
-            ->addColumn('division_name')
-            ->addColumn('employee_id')
-            ->addColumn('created_by')
-            ->addColumn('created_by_name')
-            ->addColumn('created_at_formatted', fn (Byod $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
-            ->addColumn('updated_at_formatted', fn (Byod $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
+        return PowerGrid::fields()
+            ->add('id')
+            ->add('name')
+            ->add('mobile')
+            ->add('email')
+            ->add('make_model')
+            ->add('imei')
+            ->add('post_office')
+            ->add('date_of_purchase_formatted', fn (Byod $model) => Carbon::parse($model->date_of_purchase)->format('d/m/Y'))
+            ->add('date_of_acceptance_formatted', fn (Byod $model) => Carbon::parse($model->date_of_acceptance)->format('d/m/Y'))
+            ->add('division_id')
+            ->add('division_name')
+            ->add('employee_id')
+            ->add('created_by')
+            ->add('created_by_name')
+            ->add('created_at_formatted', fn (Byod $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
+            ->add('updated_at_formatted', fn (Byod $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -153,12 +158,7 @@ final class ByodTable extends PowerGridComponent
                 ->searchable()
                 ->sortable(),
 
-            Column::make('DIVISION ID', 'division_name', 'division_id')
-                ->makeInputSelect(
-                    Division::all(),
-                    'name',
-                    'division_id'
-                ),
+            Column::make('DIVISION ID', 'division_name', 'division_id'),
 
             Column::make('EMPLOYEE ID', 'employee_id')
                 ->sortable()
@@ -169,8 +169,19 @@ final class ByodTable extends PowerGridComponent
 
             Column::make('CREATED AT', 'created_at_formatted', 'created_at')
                 ->searchable()
-                ->sortable()
-                ->makeInputDatePicker(),
+                ->sortable(),
+            Column::action('Action'),
+        ];
+    }
+
+    public function filters(): array
+    {
+        return [
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::select('division_name', 'division_id')
+                ->dataSource(\App\Models\Division::all())
+                ->optionLabel('name')
+                ->optionValue('id'),
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::datepicker('created_at_formatted', 'created_at'),
         ];
     }
 
@@ -189,16 +200,16 @@ final class ByodTable extends PowerGridComponent
      */
 
 
-    public function actions(): array
+    public function actions($row): array
     {
         return [
             Button::make('edit', 'Edit')
                 ->class('bg-indigo-500 cursor-pointer text-white px-3 py-2.5 m-1 rounded text-sm')
-                ->route('byods.edit', ['byod' => 'id']),
+                ->route('byods.edit', ['byod' => $row->id]),
 
             //    Button::make('destroy', 'Delete')
             //        ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-            //        ->route('byod.destroy', ['byod' => 'id'])
+            //        ->route('byod.destroy', ['byod' => $row->id])
             //        ->method('delete')
         ];
     }

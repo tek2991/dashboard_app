@@ -5,13 +5,18 @@ namespace App\Http\Livewire;
 use App\Models\Rtn;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class AdminRtnTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_adminrtntable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -25,11 +30,11 @@ final class AdminRtnTable extends PowerGridComponent
         $this->showCheckBox();
 
         return [
-            Exportable::make('export')
+            PowerGrid::exportable('export')
                 ->striped()
                 ->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -79,13 +84,13 @@ final class AdminRtnTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('created_at_formatted', fn (Rtn $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
-            ->addColumn('updated_at_formatted', fn (Rtn $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
+        return PowerGrid::fields()
+            ->add('id')
+            ->add('name')
+            ->add('created_at_formatted', fn (Rtn $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'))
+            ->add('updated_at_formatted', fn (Rtn $model) => Carbon::parse($model->updated_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -110,8 +115,7 @@ final class AdminRtnTable extends PowerGridComponent
 
             Column::make('NAME', 'name')
                 ->sortable()
-                ->searchable()
-                ->makeInputText(),
+                ->searchable(),
 
             // Column::make('CREATED AT', 'created_at_formatted', 'created_at')
             //     ->searchable()
@@ -122,9 +126,17 @@ final class AdminRtnTable extends PowerGridComponent
             //     ->searchable()
             //     ->sortable()
             //     ->makeInputDatePicker(),
+            Column::action('Action'),
 
         ]
 ;
+    }
+
+    public function filters(): array
+    {
+        return [
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::inputText('name'),
+        ];
     }
 
     /*
@@ -141,18 +153,17 @@ final class AdminRtnTable extends PowerGridComponent
      * @return array<int, Button>
      */
 
-    public function actions(): array
+    public function actions($row): array
     {
         return [
             Button::make('edit', 'Edit')
             ->class('bg-indigo-500 cursor-pointer text-white px-3 py-2.5 m-1 rounded text-sm')
-            ->route('admin.rtns.edit', ['rtn' => 'id'])
-            ->target(''),
+            ->route('admin.rtns.edit', ['rtn' => $row->id])
             
             /*
            Button::make('destroy', 'Delete')
                ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-               ->route('rtn.destroy', ['rtn' => 'id'])
+               ->route('rtn.destroy', ['rtn' => $row->id])
                ->method('delete')
                */
         ];

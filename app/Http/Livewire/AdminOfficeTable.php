@@ -6,13 +6,18 @@ use App\Models\Office;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
-use PowerComponents\LivewirePowerGrid\Rules\{Rule, RuleActions};
-use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
-use PowerComponents\LivewirePowerGrid\{Button, Column, Exportable, Footer, Header, PowerGrid, PowerGridComponent, PowerGridEloquent};
+use PowerComponents\LivewirePowerGrid\Facades\Rule;
+use PowerComponents\LivewirePowerGrid\Traits\WithExport;
+use PowerComponents\LivewirePowerGrid\Components\SetUp\Exportable;
+use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
+use PowerComponents\LivewirePowerGrid\PowerGridFields;
+use PowerComponents\LivewirePowerGrid\{Button, Column, Footer, Header, PowerGridComponent};
 
 final class AdminOfficeTable extends PowerGridComponent
 {
-    use ActionButton;
+    use WithExport;
+    public string $tableName = 'tbl_adminofficetable';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -26,9 +31,9 @@ final class AdminOfficeTable extends PowerGridComponent
         //$this->showCheckBox();
 
         return [
-            Exportable::make('export')->striped()->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
-            Header::make()->showSearchInput(),
-            Footer::make()
+            PowerGrid::exportable('export')->striped()->type(Exportable::TYPE_XLS, Exportable::TYPE_CSV),
+            PowerGrid::header()->showSearchInput(),
+            PowerGrid::footer()
                 ->showPerPage()
                 ->showRecordCount(),
         ];
@@ -43,10 +48,10 @@ final class AdminOfficeTable extends PowerGridComponent
     */
 
     /**
-    * PowerGrid datasource.
-    *
-    * @return Builder<\App\Models\Office>
-    */
+     * PowerGrid datasource.
+     *
+     * @return Builder<\App\Models\Office>
+     */
     public function datasource(): Builder
     {
         return Office::query()
@@ -81,16 +86,16 @@ final class AdminOfficeTable extends PowerGridComponent
     | You can pass a closure to transform/modify the data.
     |
     */
-    public function addColumns(): PowerGridEloquent
+    public function fields(): PowerGridFields
     {
-        return PowerGrid::eloquent()
-            ->addColumn('facility_id')
-            ->addColumn('name')
-            ->addColumn('type')
-            ->addColumn('officeType_name')
-            ->addColumn('division_name')
-            ->addColumn('created_at')
-            ->addColumn('created_at_formatted', fn (Office $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
+        return PowerGrid::fields()
+            ->add('facility_id')
+            ->add('name')
+            ->add('type')
+            ->add('officeType_name')
+            ->add('division_name')
+            ->add('created_at')
+            ->add('created_at_formatted', fn(Office $model) => Carbon::parse($model->created_at)->format('d/m/Y H:i:s'));
     }
 
     /*
@@ -102,7 +107,7 @@ final class AdminOfficeTable extends PowerGridComponent
     |
     */
 
-     /**
+    /**
      * PowerGrid Columns.
      *
      * @return array<int, Column>
@@ -117,7 +122,7 @@ final class AdminOfficeTable extends PowerGridComponent
             Column::make('Name', 'name')
                 ->searchable()
                 ->sortable(),
-            
+
             Column::make('Division', 'division_name')
                 ->searchable()
                 ->sortable(),
@@ -125,8 +130,15 @@ final class AdminOfficeTable extends PowerGridComponent
             Column::make('Type', 'officeType_name'),
 
             Column::make('Created at', 'created_at_formatted', 'created_at')
-                ->makeInputDatePicker()
-                ->hidden()
+                ->hidden(),
+            Column::action('Action'),
+        ];
+    }
+
+    public function filters(): array
+    {
+        return [
+            \PowerComponents\LivewirePowerGrid\Facades\Filter::datepicker('created_at_formatted', 'created_at'),
         ];
     }
 
@@ -138,25 +150,24 @@ final class AdminOfficeTable extends PowerGridComponent
     |
     */
 
-     /**
+    /**
      * PowerGrid Office Action Buttons.
      *
      * @return array<int, Button>
      */
 
 
-    public function actions(): array
+    public function actions($row): array
     {
-       return [
-           Button::make('edit', 'Edit')
-               ->class('text-indigo-600 hover:text-indigo-900 hover:underline')
-               ->route('admin.offices.edit', ['office' => 'id'])
-               ->target(''),
+        return [
+            Button::make('edit', 'Edit')
+                ->class('text-indigo-600 hover:text-indigo-900 hover:underline')
+                ->route('admin.offices.edit', ['office' => $row->id])
 
-        //    Button::make('destroy', 'Delete')
-        //        ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
-        //        ->route('admin.offices.destroy', ['office' => 'id'])
-        //        ->method('delete')
+            //    Button::make('destroy', 'Delete')
+            //        ->class('bg-red-500 cursor-pointer text-white px-3 py-2 m-1 rounded text-sm')
+            //        ->route('admin.offices.destroy', ['office' => $row->id])
+            //        ->method('delete')
         ];
     }
 
@@ -168,7 +179,7 @@ final class AdminOfficeTable extends PowerGridComponent
     |
     */
 
-     /**
+    /**
      * PowerGrid Office Action Rules.
      *
      * @return array<int, RuleActions>
