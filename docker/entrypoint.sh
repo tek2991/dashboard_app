@@ -17,7 +17,7 @@ fi
 
 # Run migrations
 echo "Running database migrations..."
-php artisan migrate --force
+# php artisan migrate --force
 
 echo "Starting PHP-FPM..."
 exec "$@"
