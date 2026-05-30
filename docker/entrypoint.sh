@@ -4,9 +4,10 @@ set -e
 # Wait for MySQL to be ready if DB_HOST is set to db
 if [ "$DB_HOST" = "db" ]; then
     echo "Waiting for database to be ready..."
-    while ! mysqladmin ping -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" --silent; do
+    while ! php -r "try { new PDO('mysql:host=' . getenv('DB_HOST') . ';port=' . (getenv('DB_PORT') ?: 3306), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); } catch (\Exception \$e) { exit(1); }" > /dev/null 2>&1; do
         sleep 1
     done
+    echo "Database is ready!"
 fi
 
 # Fix permissions for mounted volumes
