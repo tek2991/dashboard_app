@@ -15,7 +15,7 @@ The application runs using 4 lightweight Docker containers orchestrated by `dock
 
 ## 💻 Local Development Workflow
 
-When you are developing on your local machine (e.g., your Acer PC), you must compile your frontend assets locally before pushing to production. The production server **does not** compile assets to save memory.
+When you are developing on your local machine, you must compile your frontend assets locally before pushing to production. The production server **does not** compile assets to save memory.
 
 1. Make your code changes (PHP, Blade, CSS, JS).
 2. If you modified CSS or JS, build the Vite assets locally:
