@@ -13,6 +13,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 COPY --from=vendor /app/vendor /app/vendor
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
 
 # Stage 3: Build Backend & Runtime
